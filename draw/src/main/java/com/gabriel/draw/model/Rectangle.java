@@ -10,10 +10,11 @@ import java.awt.*;
 @Data
 public class Rectangle extends Shape {
 
-    public Rectangle(Point start, Point end){
+    public Rectangle(Point start, Point end) {
         super(start);
         this.setEnd(end);
-        this.setColor(Color.RED);
+        this.setColor(Color.GREEN);
         this.setRendererService(new RectangleRendererService());
     }
 }
+
