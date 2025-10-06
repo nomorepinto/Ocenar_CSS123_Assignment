@@ -1,6 +1,8 @@
 package com.gabriel.draw.service;
 
 import com.gabriel.draw.command.AddShapeCommand;
+import com.gabriel.draw.command.SetDrawModeCommand;
+import com.gabriel.draw.view.DrawingToolBar;
 import com.gabriel.drawfx.DrawMode;
 import com.gabriel.drawfx.ShapeMode;
 import com.gabriel.drawfx.command.Command;
@@ -13,21 +15,30 @@ import java.awt.*;
 
 public class DeawingCommandAppService implements AppService {
     public AppService appService;
+    private DrawingToolBar drawingToolBar;
+
     public DeawingCommandAppService(AppService appService){
         this.appService = appService;
 
+    }
+
+    public void setDrawingToolBar(DrawingToolBar drawingToolBar){
+        this.drawingToolBar = drawingToolBar;
+        updateToolBarButtons();
     }
 
     @Override
     public void undo() {
         CommandService.undo();;
         appService.repaint();
+        updateToolBarButtons();
     }
 
     @Override
     public void redo() {
         CommandService.redo();
         appService.repaint();
+        updateToolBarButtons();
     }
 
     @Override
@@ -47,7 +58,9 @@ public class DeawingCommandAppService implements AppService {
 
     @Override
     public void setDrawMode(DrawMode drawMode) {
-        appService.setDrawMode(drawMode);
+        Command command = new SetDrawModeCommand(appService, drawMode);
+        CommandService.ExecuteCommand(command);
+        updateToolBarButtons();
     }
 
     @Override
@@ -84,6 +97,7 @@ public class DeawingCommandAppService implements AppService {
     public void create(Shape shape) {
         Command command = new AddShapeCommand(appService, shape);
         CommandService.ExecuteCommand(command);
+        updateToolBarButtons();
     }
 
     @Override
@@ -115,4 +129,12 @@ public class DeawingCommandAppService implements AppService {
     public void repaint() {
         appService.repaint();
     }
+
+    private void updateToolBarButtons(){
+        if(drawingToolBar != null) {
+            drawingToolBar.setUndoEnabled(CommandService.canUndo());
+            drawingToolBar.setRedoEnabled(CommandService.canRedo());
+        }
+    }
+
 }

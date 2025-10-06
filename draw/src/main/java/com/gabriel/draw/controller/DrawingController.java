@@ -12,76 +12,100 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.geom.Ellipse2D;
 
-public class DrawingController  implements MouseListener, MouseMotionListener {
+public class DrawingController implements MouseListener, MouseMotionListener {
     private Point end;
     final private DrawingView drawingView;
-
     Shape currentShape;
-    AppService appService;
-     public DrawingController(AppService appService, DrawingView drawingView){
-       this.appService = appService;
-         this.drawingView = drawingView;
-         drawingView.addMouseListener(this);
-         drawingView.addMouseMotionListener(this);
-     }
+    private final AppService appService;
+
+    public DrawingController(AppService appService, DrawingView drawingView){
+        this.appService = appService;
+        this.drawingView = drawingView;
+        drawingView.addMouseListener(this);
+        drawingView.addMouseMotionListener(this);
+    }
+
     @Override
     public void mouseClicked(MouseEvent e) {
-
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
+        // Ignore events when in SelectMode
+        if(appService.getDrawMode() == DrawMode.SelectMode) {
+            return;
+        }
+
         Point start;
         if(appService.getDrawMode() == DrawMode.Idle) {
             start = e.getPoint();
             switch (appService.getShapeMode()){
-                case Line:  currentShape = new Line(start, start);
+                case Line:
+                    currentShape = new Line(start, start);
+                    currentShape.setColor(appService.getColor());
+                    currentShape.getRendererService().render(drawingView.getGraphics(), currentShape, false);
+                    appService.setDrawMode(DrawMode.MousePressed);
                     break;
                 case Rectangle:
                     currentShape = new Rectangle(start, start);
+                    currentShape.setColor(appService.getColor());
+                    currentShape.getRendererService().render(drawingView.getGraphics(), currentShape, false);
+                    appService.setDrawMode(DrawMode.MousePressed);
                     break;
-                case  Ellipse:
+                case Ellipse:
                     currentShape = new Ellipse(start, start);
+                    currentShape.setColor(appService.getColor());
+                    currentShape.getRendererService().render(drawingView.getGraphics(), currentShape, false);
+                    appService.setDrawMode(DrawMode.MousePressed);
                     break;
+                default:
+                    return;
             }
-            currentShape.getRendererService().render(drawingView.getGraphics(), currentShape,false );
-            appService.setDrawMode(DrawMode.MousePressed);
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-         if(appService.getDrawMode() == DrawMode.MousePressed){
-             end = e.getPoint();
-             appService.create(currentShape);
-             appService.setDrawMode(DrawMode.Idle);
-           }
+        // Ignore events when in SelectMode
+        if(appService.getDrawMode() == DrawMode.SelectMode) {
+            return;
+        }
+
+        if(appService.getDrawMode() == DrawMode.MousePressed){
+            end = e.getPoint();
+            currentShape.getRendererService().render(drawingView.getGraphics(), currentShape, true);
+            appService.scale(currentShape, end);
+            currentShape.getRendererService().render(drawingView.getGraphics(), currentShape, false);
+            appService.create(currentShape);
+            appService.setDrawMode(DrawMode.Idle);
+        }
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
-
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
-
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        // Ignore events when in SelectMode
+        if(appService.getDrawMode() == DrawMode.SelectMode) {
+            return;
+        }
+
         if(appService.getDrawMode() == DrawMode.MousePressed) {
-                end = e.getPoint();
-                currentShape.getRendererService().render(drawingView.getGraphics(), currentShape,true );
-                appService.scale(currentShape,end);
-                currentShape.getRendererService().render(drawingView.getGraphics(), currentShape,true );
-           }
+            end = e.getPoint();
+            currentShape.getRendererService().render(drawingView.getGraphics(), currentShape, true);
+            appService.scale(currentShape, end);
+            currentShape.getRendererService().render(drawingView.getGraphics(), currentShape, true);
+        }
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-
     }
 }
